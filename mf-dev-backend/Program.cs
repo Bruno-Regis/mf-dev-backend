@@ -1,4 +1,5 @@
 using mf_dev_backend.Models;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,6 +12,20 @@ builder.Services.AddRazorPages().AddRazorRuntimeCompilation();
 //Quando o programa iniciar, ele vai chamar essa configuração de BD passando a string de conexão
 builder.Services.AddDbContext<AppDbContext>(options => 
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.Configure<CookiePolicyOptions>(options =>
+{
+    options.CheckConsentNeeded = context => true;
+    options.MinimumSameSitePolicy = SameSiteMode.None;
+});
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(Options =>
+     {
+         Options.AccessDeniedPath = "/Usuarios/AccessDenied";
+         Options.LoginPath = "/Usuarios/Login";
+     });
+
 
 var app = builder.Build();
 
@@ -26,7 +41,7 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 
 app.UseRouting();
-
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllerRoute(
